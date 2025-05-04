@@ -1,11 +1,11 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
-import { router as mealRoutes } from './routes/meals.routes.js';
-import { router as authRoutes } from './routes/auth.routes.js';
-import { router as userRoutes } from './routes/user.routes.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { connectDB } from './config/db.js';
+import { router as mealRoutes } from './src/routes/meals.routes.js';
+import { router as authRoutes } from './src/routes/auth.routes.js';
+import { router as userRoutes } from './src/routes/user.routes.js';
+import { errorHandler } from './src/middleware/errorHandler.js';
+import { connectDB } from './src/config/db.js';
 
 const app = express();
 

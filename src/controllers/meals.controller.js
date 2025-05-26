@@ -1,8 +1,9 @@
 import Meal from '../models/Meal.js';
+import Category from '../models/Category.js';
 
 export const getMeals = async (req, res, next) => {
   try {
-    const meals = await Meal.find();
+    const meals = await Meal.find().populate('category');
     res.json(meals);
   } catch (error) {
     next(error);  
@@ -11,25 +12,32 @@ export const getMeals = async (req, res, next) => {
 
 export const createMeal = async (req, res, next) => {
   try {
-    const { name, description, price ,image , category } = req.body;
-    const imageUrl = req.file?.path || image;  
+    const { name, description, price, categoryId } = req.body;
+    const imageUrl = req.file?.path;
 
-    if (!name || !description || !price || !imageUrl) {
-      return res.status(400).json({ message: 'Please provide all required fields including image.' });
+    if (!name || !description || !price || !imageUrl || !categoryId) {
+      return res.status(400).json({ message: 'Please provide all required fields including image and category.' });
+    }
+
+    // Verify that the category exists
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(400).json({ message: 'Selected category does not exist.' });
     }
 
     const newMeal = new Meal({
       name,
       description,
       image: imageUrl,
-      category ,
+      category: categoryId,
       price: parseFloat(price),
       rating: 0,
       reviews: [],
     });
 
     const savedMeal = await newMeal.save();
-    res.status(201).json(savedMeal);
+    const populatedMeal = await savedMeal.populate('category');
+    res.status(201).json(populatedMeal);
 
   } catch (error) {
     console.log('Request file:', req.file);
@@ -41,7 +49,7 @@ export const createMeal = async (req, res, next) => {
 
 export const getMealById = async (req, res, next) => {
   try {
-    const meal = await Meal.findById(req.params.id);
+    const meal = await Meal.findById(req.params.id).populate('category');
 
     if (!meal) {
       return res.status(404).json({ message: 'Meal not found' });
@@ -56,7 +64,7 @@ export const getMealById = async (req, res, next) => {
 
 export const updateMeal = async (req, res, next) => {
   try {
-    const { name, description, price, category, reviews } = req.body;
+    const { name, description, price, categoryId, reviews } = req.body;
     const imageUrl = req.file?.path;
 
     const meal = await Meal.findById(req.params.id);
@@ -65,24 +73,32 @@ export const updateMeal = async (req, res, next) => {
       return res.status(404).json({ message: 'Meal not found' });
     }
 
-    meal.name = name || meal.name;  
-    meal.category = category || meal.category;
+    if (categoryId) {
+      // Verify that the new category exists
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        return res.status(400).json({ message: 'Selected category does not exist.' });
+      }
+      meal.category = categoryId;
+    }
+
+    meal.name = name || meal.name;
     meal.description = description || meal.description;
     meal.price = price ? parseFloat(price) : meal.price;
-    meal.image = imageUrl || meal.image;
+    if (imageUrl) meal.image = imageUrl;
 
     if (reviews) {
       meal.reviews = reviews;
     }
 
     const updatedMeal = await meal.save();
-    res.json(updatedMeal);
+    const populatedMeal = await updatedMeal.populate('category');
+    res.json(populatedMeal);
 
   } catch (error) {
     next(error); 
   }
 };
-
 
 export const deleteMeal = async (req, res, next) => {
   try {
@@ -131,7 +147,6 @@ export const addReview = async (req, res, next) => {
   }
 };
 
-
 export const updateReview = async (req, res, next) => {
   try {
     const { rating, comment } = req.body;
@@ -161,7 +176,6 @@ export const updateReview = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const deleteReview = async (req, res, next) => {
   try {

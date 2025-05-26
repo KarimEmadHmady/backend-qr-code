@@ -10,7 +10,7 @@ router.get('/', getMeals);
 router.post('/', authenticate, authorize(['admin']), multer.single('image'), async (req, res, next) => {
   try {
     if (!req.file) {
-      res.status(400).json({ message: 'Image file is required' });
+      res.status(400).json({ message: 'Meal image is required' });
       return;
     }
     console.log('Request file:', req.file);
@@ -21,13 +21,12 @@ router.post('/', authenticate, authorize(['admin']), multer.single('image'), asy
   }
 });
 
-
 router.get('/:id', getMealById);
 
 router.put('/:id', authenticate, authorize(['admin']), multer.single('image'), async (req, res, next) => {
   try {
     if (req.file && !req.file.mimetype.startsWith('image')) {
-      res.status(400).json({ message: 'Only image files are allowed' });
+      res.status(400).json({ message: 'Only image files are allowed for meal image' });
       return;
     }
     await updateMeal(req, res, next);
@@ -35,11 +34,12 @@ router.put('/:id', authenticate, authorize(['admin']), multer.single('image'), a
     next(error);
   }
 });
+
 router.delete('/:id', authenticate, authorize(['admin']), deleteMeal);
 
 router.post('/:id/reviews', authenticate, addReview);
 
-router.put('/:mealId/reviews/:reviewId',authenticate,  async (req, res, next) => {
+router.put('/:mealId/reviews/:reviewId', authenticate, async (req, res, next) => {
   try {
     await updateReview(req, res, next);
   } catch (error) {
@@ -47,8 +47,6 @@ router.put('/:mealId/reviews/:reviewId',authenticate,  async (req, res, next) =>
   }
 });
 
-router.delete('/:mealId/reviews/:reviewId', authenticate,  deleteReview);
-
-
+router.delete('/:mealId/reviews/:reviewId', authenticate, deleteReview);
 
 export { router };

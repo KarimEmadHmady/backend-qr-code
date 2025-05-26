@@ -15,8 +15,10 @@ export const createMeal = async (req, res, next) => {
     const { name, description, price, categoryId } = req.body;
     const imageUrl = req.file?.path;
 
-    if (!name || !description || !price || !imageUrl || !categoryId) {
-      return res.status(400).json({ message: 'Please provide all required fields including image and category.' });
+    if (!name?.en || !name?.ar || !description?.en || !description?.ar || !price || !imageUrl || !categoryId) {
+      return res.status(400).json({ 
+        message: 'Please provide all required fields including name and description in both English and Arabic, price, image, and category.' 
+      });
     }
 
     // Verify that the category exists
@@ -26,8 +28,14 @@ export const createMeal = async (req, res, next) => {
     }
 
     const newMeal = new Meal({
-      name,
-      description,
+      name: {
+        en: name.en,
+        ar: name.ar
+      },
+      description: {
+        en: description.en,
+        ar: description.ar
+      },
       image: imageUrl,
       category: categoryId,
       price: parseFloat(price),
@@ -82,8 +90,20 @@ export const updateMeal = async (req, res, next) => {
       meal.category = categoryId;
     }
 
-    meal.name = name || meal.name;
-    meal.description = description || meal.description;
+    if (name) {
+      meal.name = {
+        en: name.en || meal.name.en,
+        ar: name.ar || meal.name.ar
+      };
+    }
+
+    if (description) {
+      meal.description = {
+        en: description.en || meal.description.en,
+        ar: description.ar || meal.description.ar
+      };
+    }
+
     meal.price = price ? parseFloat(price) : meal.price;
     if (imageUrl) meal.image = imageUrl;
 

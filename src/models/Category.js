@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
+const TranslationSchema = new mongoose.Schema({
+  en: { type: String, required: true },
+  ar: { type: String, required: true }
+}, { _id: false });
+
 const CategorySchema = new mongoose.Schema(
   {
     name: { 
-      type: String, 
+      type: TranslationSchema,
       required: true,
       unique: true 
     },
@@ -12,9 +17,9 @@ const CategorySchema = new mongoose.Schema(
       required: true 
     },
     description: { 
-      type: String, 
-      default: '' ,
-      required: false 
+      type: TranslationSchema,
+      required: false,
+      default: { en: '', ar: '' }
     }
   },
   { timestamps: true }

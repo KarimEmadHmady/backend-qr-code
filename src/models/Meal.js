@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+const TranslationSchema = new mongoose.Schema({
+  en: { type: String, required: true },
+  ar: { type: String, required: true }
+}, { _id: false });
+
 const ReviewSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -12,8 +17,8 @@ const ReviewSchema = new mongoose.Schema(
 
 const MealSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
+    name: { type: TranslationSchema, required: true },
+    description: { type: TranslationSchema, required: true },
     price: { type: Number, required: true },
     image: { type: String, required: true },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },

@@ -14,20 +14,32 @@ export const createCategory = async (req, res, next) => {
     const { name, description } = req.body;
     const imageUrl = req.file?.path;
 
-    if (!name || !imageUrl) {
-      return res.status(400).json({ message: 'Please provide category name and image.' });
+    if (!name?.en || !name?.ar || !imageUrl) {
+      return res.status(400).json({ message: 'Please provide category name in both English and Arabic, and an image.' });
     }
 
-    // Check if category already exists
-    const existingCategory = await Category.findOne({ name });
+    // Check if category already exists (checking both English and Arabic names)
+    const existingCategory = await Category.findOne({
+      $or: [
+        { 'name.en': name.en },
+        { 'name.ar': name.ar }
+      ]
+    });
+    
     if (existingCategory) {
-      return res.status(400).json({ message: 'Category with this name already exists.' });
+      return res.status(400).json({ message: 'Category with this name already exists in either English or Arabic.' });
     }
 
     const newCategory = new Category({
-      name,
+      name: {
+        en: name.en,
+        ar: name.ar
+      },
       image: imageUrl,
-      description: description || ''
+      description: description ? {
+        en: description.en || '',
+        ar: description.ar || ''
+      } : { en: '', ar: '' }
     });
 
     const savedCategory = await newCategory.save();
@@ -49,15 +61,34 @@ export const updateCategory = async (req, res, next) => {
     }
 
     // If updating name, check if new name already exists
-    if (name && name !== category.name) {
-      const existingCategory = await Category.findOne({ name });
+    if (name && (name.en || name.ar)) {
+      const existingCategory = await Category.findOne({
+        _id: { $ne: req.params.id },
+        $or: [
+          { 'name.en': name.en || category.name.en },
+          { 'name.ar': name.ar || category.name.ar }
+        ]
+      });
+      
       if (existingCategory) {
-        return res.status(400).json({ message: 'Category with this name already exists.' });
+        return res.status(400).json({ message: 'Category with this name already exists in either English or Arabic.' });
       }
     }
 
-    category.name = name || category.name;
-    category.description = description || category.description;
+    if (name) {
+      category.name = {
+        en: name.en || category.name.en,
+        ar: name.ar || category.name.ar
+      };
+    }
+
+    if (description) {
+      category.description = {
+        en: description.en || category.description.en,
+        ar: description.ar || category.description.ar
+      };
+    }
+
     if (imageUrl) {
       category.image = imageUrl;
     }
